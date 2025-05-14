@@ -1,0 +1,14 @@
+<root>
+    <AuthorizedUser>ethan.jablon@ndus.edu</AuthorizedUser>
+    <ResourceGroupName>CSCI422-EJablon-gas-prices-project</ResourceGroupName>
+    <Location>EASTUS2</Location>
+    <KeyVaultName>CSCI422-EJablon-kv</KeyVaultName>
+    <StorageAccountName>csci422ejablonstorage</StorageAccountName>
+    <StorageContainerName>blob</StorageContainerName>
+
+    <DatabricksWorkspaceName>CSCI422-EJablon-databricks</DatabricksWorkspaceName>
+
+    <SQLServerName>csci422-ejablon-sql</SQLServerName>
+    <DatabaseName>csci422-ejablon-db</DatabaseName>
+    <ServerAdmin>CSCI422EJablonServerAdmin</ServerAdmin>
+</root>

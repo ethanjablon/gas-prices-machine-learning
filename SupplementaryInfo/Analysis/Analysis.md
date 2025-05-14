@@ -1,0 +1,1 @@
+There was surprisingly no clear association between oil imports and gas price. The same goes for gas sales volumes. It's possible that accounting for inflation would cause an association to appear; this will be a target of future analysis.
