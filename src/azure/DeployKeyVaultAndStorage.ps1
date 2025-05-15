@@ -38,6 +38,14 @@ $StorageAccountName=$ParameterFile.StorageAccountName # Name of storage account 
 $StorageContainerName=$ParameterFile.StorageContainerName # Name of storage container to be created
 
 
+# Set the subscription context
+# Note - this is the name of the subscription, not the ID.
+Set-AzContext -SubscriptionName $SubscriptionName
+
+$currentContext = Get-AzContext
+Write-Host "Active Subscription: $($currentContext.Subscription.Name)"
+Write-Host "Active Subscription ID: $($currentContext.Subscription.Id)"
+
 <# Create Azure resources #>
 Write-Host 'Creating resource group'
 New-AzResourceGroup -Name $ResourceGroupName -Location $Location
@@ -48,6 +56,8 @@ New-AzKeyVault -VaultName $KeyVaultName -ResourceGroupName $ResourceGroupName -L
 Set-AzKeyVaultAccessPolicy -VaultName $KeyVaultName -UserPrincipalName $AuthorizedUser -PermissionsToSecrets get,set,list
 
 Write-Host 'Creating storage account'
+# Register the storage resource provider
+Register-AzResourceProvider -ProviderNamespace Microsoft.Storage
 $params = @{'ResourceGroupName'=$ResourceGroupName
             'Name'=$StorageAccountName
             'Location'=$Location
@@ -55,7 +65,8 @@ $params = @{'ResourceGroupName'=$ResourceGroupName
             'Kind'='StorageV2'
             'AllowBlobPublicAccess'=$false
             'EnableHierarchicalNamespace'=$true
-            'AccessTier'='Hot'}
+            'AccessTier'='Hot'
+            'Debug'=$false}
 New-AzStorageAccount @params # splatting the params
 
 Write-Host 'Creating blob container in storage account'

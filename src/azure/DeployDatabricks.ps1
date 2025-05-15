@@ -40,7 +40,7 @@ Connect-AzAccount
 # Note - following assumes execution is in the folder containing the config file.
 $ParameterFile=([xml](Get-Content -Path .\AzureConfig.xml )).root
 
-#$SubscriptionName=$ParameterFile.SubscriptionName # Name of subscription in Azure
+$SubscriptionName=$ParameterFile.SubscriptionName # Name of subscription in Azure
 
 $AuthorizedUser=$ParameterFile.AuthorizedUser # Name of authorized user for key vault
 $ResourceGroupName=$ParameterFile.ResourceGroupName # Name of resource group to be created
@@ -53,6 +53,32 @@ $StorageAccountName=$ParameterFile.StorageAccountName # Name of storage account 
 #$DatabaseName=$ParameterFile.DatabaseName #Name of database to be created for storing usage data in SQL Server
 #$ServerAdmin=$ParameterFile.ServerAdmin #Azure user name of server admin
 
+# Set the subscription context
+# Note - this is the name of the subscription, not the ID.
+Write-Host 'Setting subscription context'
+Set-AzContext -SubscriptionName $SubscriptionName
+
+# Checks the Azure context
+Write-Host 'Checking subscription context'
+Get-AzContext
+
+Write-Host 'Getting user'
+Get-AzADUser -UserPrincipalName $AuthorizedUser
+
+# get ObjectId of the authorized user for the role assignment
+$userObjectId = (Get-AzADUser -UserPrincipalName $AuthorizedUser).Id
+
+# give myself permission to manage secrets in the key vault
+Write-Host 'Giving user role-based permission to manage key vault'
+New-AzRoleAssignment -ObjectId $userObjectId `
+  -RoleDefinitionName "Key Vault Administrator" `
+  -Scope "/subscriptions/e2cca51e-caac-4aee-978e-260ba21f10e9/resourceGroups/gas-prices-ml/providers/Microsoft.KeyVault/vaults/gas-prices-ml-kv"
+
+# Register the storage resource provider
+Write-Host 'Registering storage resource provider'
+Register-AzResourceProvider -ProviderNamespace Microsoft.Databricks
+# Create the Databricks workspace
+Write-Host 'Creating Databricks workspace'
 New-AzDatabricksWorkspace -Name $DatabricksName -ResourceGroupName $ResourceGroupName -Location $Location -ManagedResourceGroupName databricks-group -Sku standard
 
 $storageAccountKey = `
@@ -62,4 +88,7 @@ $storageAccountKey = `
 
 $secureKey = ConvertTo-SecureString $storageAccountKey -AsPlainText -Force
 
+Write-Host $storageAccountKey
+
+Write-Host 'Adding storage account key to key vault'
 Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name 'StorageAccountKey' -SecretValue $secureKey

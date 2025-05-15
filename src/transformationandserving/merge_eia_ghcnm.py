@@ -5,7 +5,7 @@
 
 # COMMAND ----------
 
-storage_end_point = "csci422ejablonstorage.dfs.core.windows.net"
+storage_end_point = "gaspricesmlstorage.dfs.core.windows.net"
 my_scope = "CSCI422-EJablon-secret-scope"
 my_key = "StorageAccountKey"
 
@@ -14,7 +14,7 @@ spark.conf.set(
     dbutils.secrets.get(scope=my_scope, key=my_key)
 )
 
-uri = "abfss://blob@csci422ejablonstorage.dfs.core.windows.net/"
+uri = f"abfss://blob@gaspricesmlstorage.dfs.core.windows.net/"
 
 # COMMAND ----------
 

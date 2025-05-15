@@ -1,8 +1,12 @@
 import requests
 import json
 import pandas as pd
+# pip install azure-identity
+from azure.identity import DefaultAzureCredential
+# pip install azure-storage-file-datalake
 from azure.storage.filedatalake import DataLakeServiceClient
 from src.azure import azure_connection_setup
+import time
 
 # get API key from config file
 with open("EIAKey.config") as f:
@@ -49,6 +53,7 @@ shared_params = {
     "length": 5000
 }
 
+print('Retrieving gas price data from EIA API...')
 # Get the data for the first dataset, gasoline prices.
 gas_prices_url = "https://api.eia.gov/v2/petroleum/pri/gnd/data/"
 gas_prices_params = shared_params.copy()
@@ -58,9 +63,10 @@ gas_prices_df = eia_monthly_request_multiyear(
     gas_prices_url,
     gas_prices_params,
     1990,
-    2024
+    2025
 )
 
+print('Retrieving gasoline consumption/sales data from EIA API...')
 # Get the data for gasoline consumption/sales
 gas_sales_url = "https://api.eia.gov/v2/petroleum/cons/refmg/data/"
 gas_sales_params = shared_params.copy()
@@ -70,9 +76,10 @@ gas_sales_df = eia_monthly_request_multiyear(
     gas_sales_url,
     gas_sales_params,
     1990,
-    2022
+    2025
 )
 
+print('Retrieving crude oil imports data from EIA API...')
 # Get the data for crude oil imports
 oil_imports_url = "https://api.eia.gov/v2/crude-oil-imports/data/"
 oil_imports_params = shared_params.copy()
@@ -82,15 +89,30 @@ oil_imports_df = eia_monthly_request_multiyear(
     oil_imports_url,
     oil_imports_params,
     2009,
-    2024
+    2025
 )
 
+print('printing size of gasprices and sales dataframes')
+print(gas_prices_df.shape)
+print(gas_sales_df.shape)
+
 # Upload data to blob storage
+print('Uploading gas prices data to blob storage.')
 gas_prices_file_client = blob_client.get_file_client('gas prices.csv')
-gas_prices_file_client.upload_data(gas_prices_df.to_csv().encode('utf-8'), overwrite=True)
+gas_prices_file_client.upload_data(gas_prices_df.to_csv().encode('utf-8'),
+                                  overwrite=True,
+                                  chunk_size=4 * 1024 * 1024) # 4MB chunk size
 
+print('Uploading gas sales data to blob storage.')
 gas_sales_file_client = blob_client.get_file_client('gas sales.csv')
-gas_sales_file_client.upload_data(gas_sales_df.to_csv().encode('utf-8'), overwrite=True)
+gas_sales_file_client.upload_data(gas_sales_df.to_csv().encode('utf-8'),
+                                  overwrite=True,
+                                  chunk_size=4 * 1024 * 1024) # 4MB chunk size
 
+time.sleep(5)
+
+print('Uploading oil imports data to blob storage.')
 oil_imports_file_client = blob_client.get_file_client('oil imports.csv')
-oil_imports_file_client.upload_data(oil_imports_df.to_csv().encode('utf-8'), overwrite=True)
+oil_imports_file_client.upload_data(oil_imports_df.to_csv().encode('utf-8'),
+                                  overwrite=True,
+                                  chunk_size=4 * 1024 * 1024) # 4MB chunk size
